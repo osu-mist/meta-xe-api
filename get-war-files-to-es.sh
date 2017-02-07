@@ -1,13 +1,13 @@
 #!/bin/bash
 XE_USER=$1
 XE_HOST=$2
+BANNER_HOME="/san/smf/ban/ban9/lcl"
 
 for instance in dev2 devl prod
 do
     # Get all war files into a variable as a list
-    WAR_FILES=$(ssh -l $XE_USER $XE_HOST 'cd /san/smf/ban/ban9/lcl; 
-    find . -type f  -wholename "./'"$instance"'/*/current/dist/*.[[:digit:]].war" -printf "%f\n"')
-
+    WAR_FILES=$(ssh -l $XE_USER $XE_HOST 'find '"$BANNER_HOME"' -type f  -wholename "*/'"$instance"'/*/current/dist/*.war" -printf "%f\n"')
+    echo $WAR_FILES
     for item in $WAR_FILES 
     do 
         APP=$(echo $item | awk -F '-' '{print $1}')
