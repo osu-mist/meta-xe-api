@@ -16,6 +16,9 @@ class MetaXEApplication extends Application<MetaXEConfiguration> {
     @Override
     public void run(MetaXEConfiguration configuration, Environment environment) {
         this.setup(configuration, environment)
+
+        XEAppDAO xeAppDAO = new XEAppDAO(configuration.elasticsearchUrl)
+        environment.jersey().register(new XEAppsResource(xeAppDAO))
     }
 
     /**
