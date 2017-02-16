@@ -18,7 +18,7 @@ class MetaXEApplication extends Application<MetaXEConfiguration> {
         this.setup(configuration, environment)
 
         XEAppDAO xeAppDAO = new XEAppDAO(configuration.elasticsearchUrl)
-        environment.jersey().register(new XEAppsResource(xeAppDAO))
+        environment.jersey().register(new XEAppsResource(xeAppDAO, configuration.api.endpointUri))
     }
 
     /**
