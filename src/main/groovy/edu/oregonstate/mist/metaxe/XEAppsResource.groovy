@@ -5,6 +5,7 @@ import edu.oregonstate.mist.api.jsonapi.ResourceObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
 
 import com.codahale.metrics.annotation.Timed
+import javax.annotation.security.PermitAll
 import javax.ws.rs.GET
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.Path
@@ -34,6 +35,7 @@ class XEAppsResource extends Resource {
     @Timed
     @GET
     @Path("{id}")
+    @PermitAll
     ResultObject getById(@PathParam("id") String id) {
         id = sanitize(id)
 
@@ -73,6 +75,7 @@ class XEAppsResource extends Resource {
     // Get all applications, their versions, and what instances they're deployed in.
     @Timed
     @GET
+    @PermitAll
     ResultObject search(
         @QueryParam("q")        String q,        // app name
         @QueryParam("instance") String instance, // prod, devl, dev2
