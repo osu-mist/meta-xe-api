@@ -1,7 +1,9 @@
 package edu.oregonstate.mist.metaxe
 
 import javax.ws.rs.core.UriBuilder
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.JsonMappingException
 
 @groovy.transform.TypeChecked
 class XEAppDAO {
@@ -14,18 +16,36 @@ class XEAppDAO {
 
     ESResult getById(String id) {
         def builder = UriBuilder.fromUri(this.esUrl)
-        def url = builder.path(id).build().toURL()
+        def url = builder.path('{id}').build(id).toURL()
 
-        String json
+        println "get by id: ${url}"
+
+        InputStream jsonStream
         try {
-            json = url.getText()
+            jsonStream = url.newInputStream()
         } catch (FileNotFoundException e) {
+            // 404 -> return null
             return null
+        } catch (IOException e) {
+            // some other http error
+            throw new ElasticsearchException(url, e)
         }
 
-        // TODO: catch IOException, com.fasterxml.jackson.core.JsonParseException,
-        // com.fasterxml.jackson.databind.JsonMappingException
-        mapper.readValue(json, ESResult) // return
+        // Catch JsonMappingException and JsonParseException here,
+        // as otherwise jersey will catch them and interpret them
+        // as an error in the client request
+        //
+        // Catch IOException as well, because why not
+        try {
+            mapper.readValue(jsonStream, ESResult) // return
+        } catch (IOException e) {
+            // read error
+            throw new ElasticsearchException(url, e)
+        } catch (JsonMappingException e) {
+            throw new ElasticsearchException(url, e)
+        } catch (JsonParseException e) {
+            throw new ElasticsearchException(url, e)
+        }
     }
 
     ESHits search(
@@ -43,7 +63,7 @@ class XEAppDAO {
         // of a search term because it may be slow, but we only have a handful
         // of applications, so we can afford it.
         if (q) {
-            must.add([wildcard: [applicationName: "*" + q + "*"]])
+            must.add([wildcard: [applicationName: "*" + q.toLowerCase() + "*"]])
         }
 
         if (instance) {
@@ -61,32 +81,43 @@ class XEAppDAO {
             ]
         ]
 
-        // XXX do something sensible with exeptions
+        // Catch JsonMappingException and JsonParseException,
+        // as otherwise jersey will catch them and interpret them
+        // as an error in the client request
+        //
+        // Catch IOException as well, because why not
         try {
-            def jsonStream = post(url, [
+            def conn = post(url, [
                 "query": query,
                 "from": (pageNumber - 1) * pageSize,
                 "size": pageSize
             ])
+            def jsonStream = conn.getInputStream() // checks status code
             def results = mapper.readValue(jsonStream, ESSearchResults)
             results.hits // return
         } catch (IOException e) {
-            throw new RuntimeException(e.toString())
-        } catch (com.fasterxml.jackson.databind.JsonMappingException e) {
-            throw new RuntimeException(e.toString())
-        } catch (com.fasterxml.jackson.core.JsonParseException e) {
-            throw new RuntimeException(e.toString())
+            // http exception or read error
+            throw new ElasticsearchException(url, e)
+        } catch (JsonMappingException e) {
+            throw new ElasticsearchException(url, e)
+        } catch (JsonParseException e) {
+            throw new ElasticsearchException(url, e)
         }
     }
 
-    InputStream post(URL url, def data) {
+    URLConnection post(URL url, def data) {
         def conn = url.openConnection()
         conn.doOutput = true
         conn.doInput = true
         // output stream is the *input* to the server (request body)
         // input stream is the *output* from the server (response body)
         mapper.writeValue(conn.getOutputStream(), data)
-        conn.getInputStream() // return
+        conn // return
     }
+}
 
+class ElasticsearchException extends RuntimeException {
+    ElasticsearchException(URL url, Throwable cause) {
+        super("error from elasticsearch query ${url}".toString(), cause)
+    }
 }

@@ -106,11 +106,11 @@ class XEAppsResource extends Resource {
 
     static Pattern sanitizeRegex = ~/[^A-Za-z0-9\.\-]/
 
-    // sanitize lowercases the string and strips everything except ascii
-    // letters, numbers, hyphen, and period.
+    // sanitize strips everything except
+    // ascii letters, numbers, hyphen, and period.
     static private sanitize(String s) {
         if (s != null) {
-            sanitizeRegex.matcher(s).replaceAll('').toLowerCase()
+            sanitizeRegex.matcher(s).replaceAll('')
         }
     }
 
