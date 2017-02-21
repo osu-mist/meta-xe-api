@@ -15,7 +15,7 @@ class XEAppDAO {
     ESResult getById(String id) {
         def builder = UriBuilder.fromUri(this.esUrl)
         def url = builder.path(id).build().toURL()
-        println "getByID: ${url}"
+
         String json
         try {
             json = url.getText()
@@ -34,13 +34,16 @@ class XEAppDAO {
     ) {
         def builder = UriBuilder.fromUri(this.esUrl)
         def url = builder.path("_search").build().toURL()
-        println "search: ${url}"
 
         def must = []
         def filter = []
 
+        // Search for any application whose name contains q as a substring.
+        // Elasticsearch recommends against using a wildcard at the beginning
+        // of a search term because it may be slow, but we only have a handful
+        // of applications, so we can afford it.
         if (q) {
-            must.add([match: [applicationName: [query: q.toLowerCase(), fuzziness: 2]]])
+            must.add([wildcard: [applicationName: "*" + q + "*"]])
         }
 
         if (instance) {
