@@ -55,7 +55,7 @@ class Application<T extends Configuration> extends io.dropwizard.Application<T> 
         environment.jersey().register(new AuthDynamicFeature(
                 new BasicCredentialAuthFilter.Builder<AuthenticatedUser>()
                 .setAuthenticator(new BasicAuthenticator(configuration.getCredentialsList()))
-                .setRealm('SkeletonApplication')
+                .setRealm(this.class.simpleName)
                 .buildAuthFilter()
         ))
 
