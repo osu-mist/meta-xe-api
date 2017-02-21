@@ -25,10 +25,10 @@ class XEAppDAO {
 
         // TODO: catch IOException, com.fasterxml.jackson.core.JsonParseException,
         // com.fasterxml.jackson.databind.JsonMappingException
-        return mapper.readValue(json, ESResult)
+        mapper.readValue(json, ESResult) // return
     }
 
-    List<ESResult> search(
+    ESHits search(
         String q, String instance, String version,
         int pageNumber, int pageSize
     ) {
@@ -62,11 +62,11 @@ class XEAppDAO {
         try {
             def jsonStream = post(url, [
                 "query": query,
-                "from": (pageNumber-1) * pageSize,
+                "from": (pageNumber - 1) * pageSize,
                 "size": pageSize
             ])
             def results = mapper.readValue(jsonStream, ESSearchResults)
-            results.hits.hits
+            results.hits // return
         } catch (IOException e) {
             throw new RuntimeException(e.toString())
         } catch (com.fasterxml.jackson.databind.JsonMappingException e) {
@@ -83,7 +83,7 @@ class XEAppDAO {
         // output stream is the *input* to the server (request body)
         // input stream is the *output* from the server (response body)
         mapper.writeValue(conn.getOutputStream(), data)
-        return conn.getInputStream()
+        conn.getInputStream() // return
     }
 
 }

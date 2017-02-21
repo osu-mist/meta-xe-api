@@ -39,7 +39,7 @@ class XEAppsResource extends Resource {
     @GET
     @Path("{id}")
     ResultObject getById(@PathParam("id") String id) {
-        // TODO: sanitize id
+        id = sanitize(id)
 
         ESResult es = this.dao.getById(id)
         if (es == null) {
@@ -81,8 +81,11 @@ class XEAppsResource extends Resource {
         @QueryParam("instance") String instance, // prod, devl, dev2
         @QueryParam("version")  String version   // deployed version
     ) {
-        // XXX sanitize?
-        def results = this.dao.search(q, instance, version, this.pageNumber, this.pageSize)
+        q = sanitize(q)
+        instance = sanitize(instance)
+        version = sanitize(version)
+
+        ESHits results = this.dao.search(q, instance, version, this.pageNumber, this.pageSize)
 
         def params = [:]
         if (q) {
@@ -96,25 +99,41 @@ class XEAppsResource extends Resource {
         }
 
         new ResultObject(
-            data: results.collect { mapESObject(it) },
-            links: getSearchLinks(params),
+            data: results.hits.collect { mapESObject(it) },
+            links: getPaginationLinks(params, results.total),
         )
     }
 
-    private getSearchLinks(Map<String,String> params) {
+    static Pattern sanitizeRegex = ~/[^A-Za-z0-9\.\-]/
+
+    // sanitize lowercases the string and strips everything except ascii
+    // letters, numbers, hyphen, and period.
+    static private sanitize(String s) {
+        if (s != null) {
+            sanitizeRegex.matcher(s).replaceAll('').toLowerCase()
+        }
+    }
+
+    private getPaginationLinks(Map<String,String> params, int totalHits) {
         def pageNumber = this.getPageNumber()
         def pageSize = this.getPageSize()
-        return [
+        def lastPage = (totalHits + pageSize - 1).intdiv(pageSize)
+
+        [
             self: getPaginationUrl(params, pageNumber, pageSize),
-            next: getPaginationUrl(params, pageNumber+1, pageSize),
-            prev: pageNumber > 1 ? getPaginationUrl(params, pageNumber-1, pageSize) : null,
+            first: getPaginationUrl(params, 1, pageSize),
+            last: getPaginationUrl(params, lastPage, pageSize),
+            next: pageNumber < lastPage ?
+                getPaginationUrl(params, pageNumber + 1, pageSize) : null,
+            prev: pageNumber > 1 ?
+                getPaginationUrl(params, pageNumber - 1, pageSize) : null,
         ]
     }
 
     private String getPaginationUrl(Map<String,String> params, int pageNumber, int pageSize) {
         params = new LinkedHashMap(params)
         params["pageNumber"] = pageNumber.toString()
-        params["pageSize"] = this.pageSize.toString()
+        params["pageSize"] = pageSize.toString()
         getPaginationUrl(params)
     }
 }
