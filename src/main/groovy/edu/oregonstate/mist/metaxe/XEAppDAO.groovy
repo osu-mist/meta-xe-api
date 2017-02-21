@@ -1,9 +1,9 @@
 package edu.oregonstate.mist.metaxe
 
-import javax.ws.rs.core.UriBuilder
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.JsonMappingException
+import javax.ws.rs.core.UriBuilder
 
 @groovy.transform.TypeChecked
 class XEAppDAO {

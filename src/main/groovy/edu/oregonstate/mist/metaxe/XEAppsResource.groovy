@@ -1,23 +1,18 @@
 package edu.oregonstate.mist.metaxe
 
-import edu.oregonstate.mist.api.Configuration
 import edu.oregonstate.mist.api.Resource
-
 import edu.oregonstate.mist.api.jsonapi.ResourceObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
 
+import com.codahale.metrics.annotation.Timed
 import javax.ws.rs.GET
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
-import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.MultivaluedMap
-import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
-import javax.ws.rs.core.UriInfo
 import java.util.regex.Pattern
 
 @Path("/xeapps")
@@ -36,6 +31,7 @@ class XEAppsResource extends Resource {
     }
 
     // Get a specific application by ID.
+    @Timed
     @GET
     @Path("{id}")
     ResultObject getById(@PathParam("id") String id) {
@@ -75,6 +71,7 @@ class XEAppsResource extends Resource {
     }
 
     // Get all applications, their versions, and what instances they're deployed in.
+    @Timed
     @GET
     ResultObject search(
         @QueryParam("q")        String q,        // app name
