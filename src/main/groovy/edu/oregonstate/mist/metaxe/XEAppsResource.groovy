@@ -108,13 +108,13 @@ class XEAppsResource extends Resource {
 
     // sanitize strips everything except
     // ascii letters, numbers, hyphen, and period.
-    static private sanitize(String s) {
+    static private String sanitize(String s) {
         if (s != null) {
             sanitizeRegex.matcher(s).replaceAll('')
         }
     }
 
-    private getPaginationLinks(Map<String,String> params, int totalHits) {
+    private Map<String,String> getPaginationLinks(Map<String,String> params, int totalHits) {
         def pageNumber = this.getPageNumber()
         def pageSize = this.getPageSize()
         def lastPage = (totalHits + pageSize - 1).intdiv(pageSize)

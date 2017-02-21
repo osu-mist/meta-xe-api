@@ -105,7 +105,7 @@ class XEAppDAO {
         }
     }
 
-    URLConnection post(URL url, def data) {
+    private URLConnection post(URL url, def data) {
         def conn = url.openConnection()
         conn.doOutput = true
         conn.doInput = true
