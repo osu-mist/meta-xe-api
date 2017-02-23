@@ -46,10 +46,8 @@ class XEAppDAO {
         }
     }
 
-    ESHits search(
-        String q, String instance, String version,
-        int pageNumber, int pageSize
-    ) {
+    ESHits search(String q, String instance, String version,
+                  int pageNumber, int pageSize) {
         def builder = UriBuilder.fromUri(this.esUrl)
         def url = builder.path("_search").build().toURL()
 

@@ -25,6 +25,7 @@ class XEAppsResource extends Resource {
     private URI myEndpointUri
 
     private final String JSONAPI_TYPE = "xeapp"
+    private static Pattern sanitizeRegex = ~/[^A-Za-z0-9\.\-]/
 
     XEAppsResource(XEAppDAO dao, URI endpointUri) {
         this.dao = dao
@@ -32,7 +33,11 @@ class XEAppsResource extends Resource {
         this.endpointUri = endpointUri
     }
 
-    // Get a specific application by ID.
+    /**
+     * Get a specific application by ID.
+     *
+     * @param id the application id
+     */
     @Timed
     @GET
     @Path("{id}")
@@ -52,7 +57,7 @@ class XEAppsResource extends Resource {
         )
     }
 
-    ResourceObject mapESObject(ESResult es) {
+    private ResourceObject mapESObject(ESResult es) {
         new ResourceObject(
             id: es.id,
             type: JSONAPI_TYPE,
@@ -68,17 +73,25 @@ class XEAppsResource extends Resource {
         )
     }
 
-    String urlFor(String id) {
+    private String urlFor(String id) {
         UriBuilder.fromUri(this.myEndpointUri).path("xeapps/{id}").build(id).toString()
     }
 
-    // Get all applications, their versions, and what instances they're deployed in.
+    /**
+     * Get all applications, their versions, and what instances they're deployed in.
+     *
+     * @param q query string; will match all applications which contain this
+     *          string as a substring
+     * @param instance filter by deployed instance (prod, devl, dev2)
+     * @param version filter by deployed version
+     * @return a ResultObject with the list of results
+     */
     @Timed
     @GET
     ResultObject search(
-        @QueryParam("q")        String q,        // app name
-        @QueryParam("instance") String instance, // prod, devl, dev2
-        @QueryParam("version")  String version   // deployed version
+        @QueryParam("q")        String q,
+        @QueryParam("instance") String instance,
+        @QueryParam("version")  String version
     ) {
         q = sanitize(q)
         instance = sanitize(instance)
@@ -103,11 +116,11 @@ class XEAppsResource extends Resource {
         )
     }
 
-    static Pattern sanitizeRegex = ~/[^A-Za-z0-9\.\-]/
-
-    // sanitize strips everything except
-    // ascii letters, numbers, hyphen, and period.
-    static private String sanitize(String s) {
+    /**
+     * Sanitize strips everything except
+     * ascii letters, numbers, hyphen, and period.
+     */
+    private static String sanitize(String s) {
         if (s != null) {
             sanitizeRegex.matcher(s).replaceAll('')
         }
