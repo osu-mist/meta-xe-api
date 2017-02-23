@@ -18,6 +18,7 @@ import java.util.regex.Pattern
 
 @Path("/xeapps")
 @Produces(MediaType.APPLICATION_JSON)
+@PermitAll
 @groovy.transform.TypeChecked
 class XEAppsResource extends Resource {
     private XEAppDAO dao
@@ -35,7 +36,6 @@ class XEAppsResource extends Resource {
     @Timed
     @GET
     @Path("{id}")
-    @PermitAll
     ResultObject getById(@PathParam("id") String id) {
         id = sanitize(id)
 
@@ -75,7 +75,6 @@ class XEAppsResource extends Resource {
     // Get all applications, their versions, and what instances they're deployed in.
     @Timed
     @GET
-    @PermitAll
     ResultObject search(
         @QueryParam("q")        String q,        // app name
         @QueryParam("instance") String instance, // prod, devl, dev2
