@@ -18,8 +18,6 @@ class XEAppDAO {
         def builder = UriBuilder.fromUri(this.esUrl)
         def url = builder.path('{id}').build(id).toURL()
 
-        println "get by id: ${url}"
-
         InputStream jsonStream
         try {
             jsonStream = url.newInputStream()
