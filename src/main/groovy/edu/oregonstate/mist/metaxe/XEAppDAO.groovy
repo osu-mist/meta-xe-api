@@ -1,14 +1,18 @@
 package edu.oregonstate.mist.metaxe
 
 import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.JsonMappingException
+import com.fasterxml.jackson.databind.ObjectMapper
 import javax.ws.rs.core.UriBuilder
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 @groovy.transform.TypeChecked
 class XEAppDAO {
+    private static final Logger LOGGER = LoggerFactory.getLogger(XEAppDAO)
+    private static ObjectMapper mapper = new ObjectMapper()
+
     private URI esUrl
-    private ObjectMapper mapper = new ObjectMapper()
 
     XEAppDAO(URI elasticsearchUrl) {
         this.esUrl = elasticsearchUrl
@@ -23,6 +27,7 @@ class XEAppDAO {
             jsonStream = url.newInputStream()
         } catch (FileNotFoundException e) {
             // 404 -> return null
+            LOGGER.info("elasticsearch returned 404 error for {}", url)
             return null
         } catch (IOException e) {
             // some other http error
