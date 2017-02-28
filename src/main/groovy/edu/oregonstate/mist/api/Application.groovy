@@ -33,16 +33,21 @@ class Application<T extends Configuration> extends io.dropwizard.Application<T> 
     }
 
     /**
-     * Registers basic API stuff like the InfoResource, build info lifecycle
-     * manager, Jersey exception mappers, pretty print filter,
-     * and authentication handler
+     * Performs common application setup logic.
+     *
+     * Currently this includes loading Resource properties,
+     * registering InfoResource, starting the build info lifecycle manager,
+     * installing Jersey exception mappers, installing the pretty print filter,
+     * and registering an authentication handler.
+     *
+     * Applications should call this method at the beginning of run()
      *
      * @param configuration
      * @param environment
      */
     protected void setup(T configuration, Environment environment) {
-
         Resource.loadProperties()
+
         BuildInfoManager buildInfoManager = new BuildInfoManager()
         environment.lifecycle().manage(buildInfoManager)
 

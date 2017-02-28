@@ -146,6 +146,6 @@ class XEAppsResource extends Resource {
         params = new LinkedHashMap(params)
         params["pageNumber"] = pageNumber.toString()
         params["pageSize"] = pageSize.toString()
-        getPaginationUrl(params)
+        getPaginationUrl(params, "xeapps")
     }
 }
