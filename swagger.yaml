@@ -1,75 +1,147 @@
 swagger: '2.0'
+
 info:
-  title: Web API Skeleton
-  description: Skeleton for Dropwizard Web APIs
-  version: '0.0'
-  license:
-    name: GNU Affero General Public License Version 3
-    url: http://www.gnu.org/licenses/agpl-3.0.en.html
-externalDocs:
-  description: GitHub Repository
-  url: https://github.com/osu-mist/web-api-skeleton
-host: localhost
-schemes:
-  - http
-basePath: /api/v0
+  version: "0.0.1"
+  title: XE Meta API
+  description: Find out what XE applications are running, in what instances, and their versions.
+
 consumes:
-  - text/plain
-produces:
-  - text/plain
+  - application/json
+
 paths:
-  /:
+  /xeapps:
     get:
-      summary: Get information
-      description: Build and runtime information about the application.
+      description: "Get all applications, their versions, and what instances they're deployed in."
+      produces:
+        - application/json
       parameters:
-        - $ref: '#/parameters/pretty'
+        - name: q
+          in: query
+          description: "Search query for the name of an XE application."
+          required: false
+          type: string
+        - name: instance
+          in: query
+          description: >
+            Filter by what instance the application is deployed in.
+            Acceptable values are prod, devl, or dev2.
+          required: false
+          type: string
+        - name: version
+          in: query
+          description: "Filter by what version is deployed."
+          required: false
+          type: string
+        - name: page[size]
+          in: query
+          description: "Number of results to return. Used in pagination. Default value is 10."
+          required: false
+          type: string
+        - name: page[number]
+          in: query
+          description: "Page number of results. Used to paginate through results."
+          required: false
+          type: string
       responses:
         200:
-          description: Object containing information
+          description: "Successful response"
           schema:
-            $ref: '#/definitions/Info'
-
-parameters:
-  pretty:
-    name: pretty
-    in: query
-    type: boolean
-    required: false
-    description: If true, JSON response will be pretty-printed
+            $ref: "#/definitions/ResultObject"
+        500:
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/Error"
+  /xeapps/{id}:
+    get:
+      description: "Get a specific application by ID."
+      produces:
+        - applicaiton/json
+      parameters:
+        - name: id
+          in: path
+          description: "ID of XE application"
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Successful response"
+          schema:
+            $ref: "#/definitions/ResultObject"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/Error"
 
 definitions:
-  Info:
+  ResultObject:
     properties:
-      name:
+      links:
+        $ref: "#/definitions/ResultLinks"
+      data:
+        type: array
+        items:
+          $ref: "#/definitions/ResourceObject"
+
+  ResourceObject:
+    properties:
+      id:
         type: string
-        description: Name of the API.
-      time:
+      type:
         type: string
-        description: Build time in ISO 8601 format.
-      unixTime:
-        type: integer
-        description: Build time as milliseconds since the unix epoch.
-      commit:
+      attributes:
+        $ref: "#/definitions/Attributes"
+      links:
+        $ref: "#/definitions/ResourceLinks"
+
+  Attributes:
+    properties:
+      applicationName:
         type: string
-        description: Git commit hash of the revision which was built.
-      documentation:
+      versions:
+        $ref: "#/definitions/Versions"
+
+  Versions:
+    properties:
+      prod:
         type: string
-        description: Filename of the swagger specification for the API.
+      devl:
+        type: string
+      dev2:
+        type: string
+
+  ResultLinks:
+    properties:
+      self:
+        type: string
+      first:
+        type: string
+      last:
+        type: string
+      prev:
+        type: string
+      next:
+        type: string
+
+  ResourceLinks:
+    properties:
+      self:
+        type: string
+
   Error:
+    type: object
     properties:
       status:
         type: integer
-        description: HTTP status code.
+        format: int32
       developerMessage:
         type: string
-        description: An error string aimed at developers.
       userMesage:
         type: string
-        description: An error string aimed at end users.
       code:
         type: integer
-        description: Error code.
       details:
         type: string
-        description: A link to further information about the error.

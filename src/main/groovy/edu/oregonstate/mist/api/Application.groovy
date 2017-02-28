@@ -1,4 +1,4 @@
-package edu.oregonstate.mist.webapiskeleton
+package edu.oregonstate.mist.api
 
 import de.thomaskrille.dropwizard_template_config.TemplateConfigBundle
 import edu.oregonstate.mist.api.BuildInfoManager
@@ -10,7 +10,6 @@ import edu.oregonstate.mist.api.BasicAuthenticator
 import edu.oregonstate.mist.api.PrettyPrintResponseFilter
 import edu.oregonstate.mist.api.jsonapi.GenericExceptionMapper
 import edu.oregonstate.mist.api.jsonapi.NotFoundExceptionMapper
-import io.dropwizard.Application
 import io.dropwizard.auth.AuthDynamicFeature
 import io.dropwizard.auth.AuthValueFactoryProvider
 import io.dropwizard.auth.basic.BasicCredentialAuthFilter
@@ -20,35 +19,53 @@ import io.dropwizard.setup.Environment
 import javax.ws.rs.WebApplicationException
 
 /**
- * Main application class.
+ * Main application base class.
  */
-class SkeletonApplication extends Application<Configuration> {
+class Application<T extends Configuration> extends io.dropwizard.Application<T> {
     /**
      * Initializes application bootstrap.
      *
      * @param bootstrap
      */
     @Override
-    public void initialize(Bootstrap<Configuration> bootstrap) {
+    public void initialize(Bootstrap<T> bootstrap) {
         bootstrap.addBundle(new TemplateConfigBundle())
     }
 
     /**
-     * Registers lifecycle managers and Jersey exception mappers
-     * and container response filters
+     * Performs common application setup logic.
      *
+     * Currently this includes loading Resource properties,
+     * registering InfoResource, starting the build info lifecycle manager,
+     * installing Jersey exception mappers, installing the pretty print filter,
+     * and registering an authentication handler.
+     *
+     * Applications should call this method at the beginning of run()
+     *
+     * @param configuration
      * @param environment
-     * @param buildInfoManager
      */
-    protected void registerAppManagerLogic(Environment environment,
-                                           BuildInfoManager buildInfoManager) {
+    protected void setup(T configuration, Environment environment) {
+        Resource.loadProperties()
 
+        BuildInfoManager buildInfoManager = new BuildInfoManager()
         environment.lifecycle().manage(buildInfoManager)
 
         environment.jersey().register(new NotFoundExceptionMapper())
         environment.jersey().register(new GenericExceptionMapper())
         environment.jersey().register(new LoggingExceptionMapper<WebApplicationException>(){})
         environment.jersey().register(new PrettyPrintResponseFilter())
+        environment.jersey().register(new InfoResource(buildInfoManager.getInfo()))
+
+        environment.jersey().register(new AuthDynamicFeature(
+                new BasicCredentialAuthFilter.Builder<AuthenticatedUser>()
+                .setAuthenticator(new BasicAuthenticator(configuration.getCredentialsList()))
+                .setRealm(this.class.simpleName)
+                .buildAuthFilter()
+        ))
+
+        environment.jersey().register(new AuthValueFactoryProvider.Binder
+                <AuthenticatedUser>(AuthenticatedUser.class))
     }
 
     /**
@@ -58,29 +75,7 @@ class SkeletonApplication extends Application<Configuration> {
      * @param environment
      */
     @Override
-    public void run(Configuration configuration, Environment environment) {
-        Resource.loadProperties()
-        BuildInfoManager buildInfoManager = new BuildInfoManager()
-        registerAppManagerLogic(environment, buildInfoManager)
-
-        environment.jersey().register(new InfoResource(buildInfoManager.getInfo()))
-        environment.jersey().register(new AuthDynamicFeature(
-                new BasicCredentialAuthFilter.Builder<AuthenticatedUser>()
-                .setAuthenticator(new BasicAuthenticator(configuration.getCredentialsList()))
-                .setRealm('SkeletonApplication')
-                .buildAuthFilter()
-        ))
-        environment.jersey().register(new AuthValueFactoryProvider.Binder
-                <AuthenticatedUser>(AuthenticatedUser.class))
-    }
-
-    /**
-     * Instantiates the application class with command-line arguments.
-     *
-     * @param arguments
-     * @throws Exception
-     */
-    public static void main(String[] arguments) throws Exception {
-        new SkeletonApplication().run(arguments)
+    public void run(T configuration, Environment environment) {
+        this.setup(configuration, environment)
     }
 }

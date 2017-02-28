@@ -1,6 +1,6 @@
-# Web API Skeleton
+# Meta XE API
 
-Skeleton for Dropwizard Web APIs.
+API for checking XE app deployment status.
 
 ### Generate Keys
 
@@ -80,63 +80,6 @@ Run the project:
 
     $ gradle run
 
-## Contrib Files
-
-Any code that contains intellectual property from a vendor should be stored in Github Enterprise instead of public Github. Make the name of the contrib repo in Github Enterprise follow this format using archivesBaseName in gradle.properties.
-
-    archivesBaseName-contrib
-
-Set the value of getContribFiles to yes in gradle.properties.
-
-    getContribFiles=yes
-
-Also set the value of contribCommit to the SHA1 of the desired commit to be used from the contrib repository.
-
-    contribCommit={SHA1}
-    
-Files in a Github Enterprise repo will be copied to this directory upon building the application.
-
-    gradle build
-
-Contrib files are copied to:
-
-    /src/main/groovy/edu/oregonstate/mist/contrib/
-    
-## Base a New Project off the Skeleton
-
-Clone the skeleton:
-
-    $ git clone --origin skeleton git@github.com:osu-mist/web-api-skeleton.git my-api
-    $ cd my-api
-
-Rename the webapiskeleton package and SkeletonApplication class:
-
-    $ git mv src/main/groovy/edu/oregonstate/mist/webapiskeleton src/main/groovy/edu/oregonstate/mist/myapi
-    $ vim src/main/groovy/edu/oregonstate/mist/myapi/SkeletonApplication.class
-
-Update gradle.properties with your package name and main class.
-
-Replace swagger.yaml with your own API specification.
-
-Update configuration-example.yaml as appropriate for your application.
-
-Update the resource examples at the end of this readme.
-
-## Base an Existing Project off the Skeleton
-
-Add the skeleton as a remote:
-
-    $ git remote add skeleton git@github.com:osu-mist/web-api-skeleton.git
-    $ git fetch skeleton
-
-Merge the skeleton into your codebase:
-
-    $ git checkout feature/abc-123-branch
-    $ git merge skeleton/master
-    ...
-    $ git commit -v
-
-
 ## Incorporate Updates from the Skeleton
 
 Fetch updates from the skeleton:
@@ -165,9 +108,77 @@ This resource returns build and runtime information:
     $ curl \
     > --cacert doej.pem \
     > --user "username:password" \
-    > https://localhost:8080/api/v0/
-    {"name":"web-api-skeleton","time":"2016-08-02 14:37:01-0700","unixTime":1470173821035,"commit":"e3d396e","documentation":"swagger.yaml"}
+    > "https://localhost:8080/api/v0/?pretty=true"
+    {
+        "name" : "meta-xe-api",
+        "time" : "2017-02-23 15:29:35-0800",
+        "unixTime" : 1487892575248,
+        "commit" : "4290452",
+        "documentation" : "swagger.yaml"
+    }
 
 NOTE: you should only specify a certificate with --cacert for local testing.
 Production servers should use a real certificate
 issued by a valid certificate authority.
+
+### GET /xeapps/:id
+
+Return information about a single XE application:
+
+    % curl \
+    > --cacert doej.pem
+    > --user "username:password"
+    > "http://localhost:8080/api/v0/xeapps/ExampleApp?pretty=true"
+    {
+      "links" : {
+        "self" : "https://api.oregonstate.edu/v1/xeapps/ExampleApp"
+      },
+      "data" : {
+        "id" : "ExampleApp",
+        "type" : "xeapp",
+        "attributes" : {
+          "applicationName" : "ExampleApp",
+          "versions" : {
+            "dev2" : "9.2",
+            "devl" : "9.3",
+            "prod" : "9.2"
+          }
+        },
+        "links" : {
+          "self" : "https://api.oregonstate.edu/v1/xeapps/ExampleApp"
+        }
+      }
+    }
+
+### GET /xeapps
+
+Search for apps.
+
+    % curl \
+    > --cacert doej.pem
+    > --user "username:password"
+    > "http://localhost:8092/api/v0/xeapps?q=Example&pretty=true"
+    {
+      "links" : {
+        "self" : "https://api.oregonstate.edu/xeapps?q=Example&page%5Bnumber%5D=1&page%5Bsize%5D=10",
+        "first" : "https://api.oregonstate.edu/xeapps?q=Example&page%5Bnumber%5D=1&page%5Bsize%5D=10",
+        "last" : "https://api.oregonstate.edu/xeapps?q=Example&page%5Bnumber%5D=1&page%5Bsize%5D=10",
+        "next" : null,
+        "prev" : null
+      },
+      "data" : [ {
+        "id" : "ExampleApp",
+        "type" : "xeapp",
+        "attributes" : {
+          "applicationName" : "ExampleApp",
+          "versions" : {
+            "dev2" : "9.2",
+            "devl" : "9.3",
+            "prod" : "9.2"
+          }
+        },
+        "links" : {
+          "self" : "https://api.oregonstate.edu/v1/xeapps/ExampleApp"
+        }
+      } ]
+    }
