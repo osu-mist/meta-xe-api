@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.UriBuilder
 import java.util.regex.Pattern
 
-@Path("/xeapps")
+@Path("xeapps")
 @Produces(MediaType.APPLICATION_JSON)
 @PermitAll
 @groovy.transform.TypeChecked
