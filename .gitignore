@@ -27,3 +27,9 @@ build.properties
 *.cer
 *.keystore
 *.truststore
+
+# Integration Tests Configuration
+configuration.json
+
+# Python Compiled Bytecode
+*.pyc

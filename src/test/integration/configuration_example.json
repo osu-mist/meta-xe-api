@@ -1,0 +1,13 @@
+{
+    "hostname": "https://api.oregonstate.edu/",
+    "version": "v1",
+
+    "api": "/xeapps",
+
+    "token_api": "https://api.oregonstate.edu/oauth2/token",
+    "client_id": "secret",
+    "client_secret": "sauce",
+
+    "environments":["dev2", "devl", "prod"],
+    "application_id":"BannerExtensibility"
+}
