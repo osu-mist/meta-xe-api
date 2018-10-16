@@ -3,12 +3,17 @@ info:
   version: "0.0.1"
   title: XE Meta API
   description: Find out what XE applications are running, in what instances, and their versions.
+host: api.oregonstate.edu
+schemes:
+  - https
+basePath: /v1
 consumes:
   - application/json
 paths:
   /xeapps:
     get:
       description: "Get all applications, their versions, and what instances they're deployed in."
+      operationId: getXEApps
       produces:
         - application/json
       parameters:
@@ -52,6 +57,7 @@ paths:
   /xeapps/{id}:
     get:
       description: "Get a specific application by ID."
+      operationId: getXEAppByID
       produces:
         - applicaiton/json
       parameters:
