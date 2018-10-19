@@ -39,12 +39,15 @@ def parse_file_names(instance):
         app = name_parts[0]
         version = name_parts[1].split(".war")[0]
 
-        version_dict = {"instance": instance, "version": version}
+        if app not in xe_apps:
+            xe_apps[app] = {'applicationName': app, 'versions': {}}
 
-        if app in xe_apps:
-            xe_apps[app]['versions'].append(version_dict)
-        else:
-            xe_apps[app] = {"applicationName": app, "versions": [version_dict]}
+        # There shouldn't be any duplicate instances for apps
+        if instance in xe_apps[app]['versions'].keys():
+            exit(f"Duplicate instance found. "
+                 f"App: {app}, instance: {instance}")
+
+        xe_apps[app]['versions'][instance] = version
 
 
 # Call above methods to get a dict containing all the apps, then write to a

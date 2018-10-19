@@ -15,28 +15,21 @@ $ python3 create_es_bulk_json.py -i configuration.json
 
 3. `xe_apps.json` will be created in the same directory as `create_es_bulk_json.py`
 
-### JSON File Example
+### JSON File Format Example
 ```json
 {
   "app1": {
-    "versions": [
-      {
-        "instance": "devl",
-        "version": "2.0"
-      },
-      {
-        "instance": "prod",
-        "version": "1.0"
-      }
-    ]
+    "applicationName": "app1",
+    "versions": {
+        "devl": "2.0",
+        "prod": "1.0"
+    }
   },
   "app2": {
-    "versions": [
-      {
-        "instance": "devl",
-        "version": "1.0"
-      }
-    ]
+    "applicationName": "app2",
+    "versions": {
+      "devl": "1.0"
+    }
   }
 }
 ```
