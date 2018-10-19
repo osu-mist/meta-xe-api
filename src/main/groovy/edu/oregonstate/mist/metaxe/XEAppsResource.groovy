@@ -44,32 +44,30 @@ class XEAppsResource extends Resource {
     ResultObject getById(@PathParam("id") String id) {
         id = sanitize(id)
 
-        ESResult es = this.dao.getById(id)
-        if (es == null) {
+        Attributes attributes = this.dao.getById(id)
+        if (attributes == null) {
             throw new NotFoundException()
         }
 
         new ResultObject(
-            data: mapESObject(es),
-            links: [
-                self: this.urlFor(es.id)
-            ]
+            data: createResourceObject(attributes),
+//            links: [
+//                self: this.urlFor(es.id)
+//            ]
         )
     }
 
-    private ResourceObject mapESObject(ESResult es) {
+    private ResourceObject createResourceObject(Attributes attributes) {
         new ResourceObject(
-            id: es.id,
+            id: attributes.applicationName,
             type: JSONAPI_TYPE,
             attributes: new Attributes(
-                applicationName: es.source.applicationName,
-                versions: es.source.versions.collectEntries { v ->
-                    [ (v.instance): v.version ]
-                }
-            ),
-            links: [
-                self: this.urlFor(es.id)
-            ],
+                applicationName: attributes.applicationName,
+                versions: attributes.versions
+            )
+//            links: [
+//                self: this.urlFor(es.id)
+//            ],
         )
     }
 
@@ -97,7 +95,9 @@ class XEAppsResource extends Resource {
         instance = sanitize(instance)
         version = sanitize(version)
 
-        ESHits results = this.dao.search(q, instance, version, this.pageNumber, this.pageSize)
+        List<Attributes> results = this.dao.search(
+                q, instance, version, this.pageNumber, this.pageSize
+        )
 
         def params = [:]
         if (q) {
@@ -111,8 +111,8 @@ class XEAppsResource extends Resource {
         }
 
         new ResultObject(
-            data: results.hits.collect { mapESObject(it) },
-            links: getPaginationLinks(params, results.total),
+            data: results.collect { createResourceObject(it) }
+//            links: getPaginationLinks(params, results.total),
         )
     }
 
@@ -126,26 +126,26 @@ class XEAppsResource extends Resource {
         }
     }
 
-    private Map<String,String> getPaginationLinks(Map<String,String> params, int totalHits) {
-        def pageNumber = this.getPageNumber()
-        def pageSize = this.getPageSize()
-        def lastPage = (totalHits + pageSize - 1).intdiv(pageSize)
-
-        [
-            self: getPaginationUrl(params, pageNumber, pageSize),
-            first: getPaginationUrl(params, 1, pageSize),
-            last: getPaginationUrl(params, lastPage, pageSize),
-            next: pageNumber < lastPage ?
-                getPaginationUrl(params, pageNumber + 1, pageSize) : null,
-            prev: pageNumber > 1 ?
-                getPaginationUrl(params, pageNumber - 1, pageSize) : null,
-        ]
-    }
-
-    private String getPaginationUrl(Map<String,String> params, int pageNumber, int pageSize) {
-        params = new LinkedHashMap(params)
-        params["pageNumber"] = pageNumber.toString()
-        params["pageSize"] = pageSize.toString()
-        getPaginationUrl(params, "xeapps")
-    }
+//    private Map<String,String> getPaginationLinks(Map<String,String> params, int totalHits) {
+//        def pageNumber = this.getPageNumber()
+//        def pageSize = this.getPageSize()
+//        def lastPage = (totalHits + pageSize - 1).intdiv(pageSize)
+//
+//        [
+//            self: getPaginationUrl(params, pageNumber, pageSize),
+//            first: getPaginationUrl(params, 1, pageSize),
+//            last: getPaginationUrl(params, lastPage, pageSize),
+//            next: pageNumber < lastPage ?
+//                getPaginationUrl(params, pageNumber + 1, pageSize) : null,
+//            prev: pageNumber > 1 ?
+//                getPaginationUrl(params, pageNumber - 1, pageSize) : null,
+//        ]
+//    }
+//
+//    private String getPaginationUrl(Map<String,String> params, int pageNumber, int pageSize) {
+//        params = new LinkedHashMap(params)
+//        params["pageNumber"] = pageNumber.toString()
+//        params["pageSize"] = pageSize.toString()
+//        getPaginationUrl(params, "xeapps")
+//    }
 }

@@ -45,5 +45,3 @@ authentication:
 
 api:
   endpointUri: https://api.oregonstate.edu/v1/
-
-elasticsearchUrl: http://localhost:9200/xe/apps

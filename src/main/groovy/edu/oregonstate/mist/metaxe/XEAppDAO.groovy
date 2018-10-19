@@ -21,10 +21,31 @@ class XEAppDAO {
     }
 
     Attributes getById(String id) {
-        Map<String, Attributes> allAttributes = mapper.readValue(
-                xeAppsFile, new TypeReference<Map<String, Attributes>>(){}
-        )
-        allAttributes?.(id) // TODO: Make sure this works, find better way if possible
+        Map<String, Attributes> allAttributes = getAllAttributes()
+        allAttributes?.get(id)
+    }
+
+    List<Attributes> search(String q, String instance, String version, int pageNumber,
+                            int pageSize) {
+        Map<String, Attributes> allAttributes = getAllAttributes()
+        Map<String, Attributes> filteredAttributes = allAttributes.findAll { key, value ->
+            (q == null || key.contains(q)) &&
+                    (instance == null || value.versions.containsKey(instance)) &&
+                    (version == null || value.versions.containsValue(version))
+        }
+        filteredAttributes.values().asList() // TODO: paginate
+    }
+
+    private Map<String, Attributes> getAllAttributes() {
+        Map<String, Attributes> allAttributes
+        try {
+            allAttributes = mapper.readValue(
+                    xeAppsFile, new TypeReference<Map<String, Attributes>>() {}
+            ) as Map<String, Attributes>
+        } catch(Exception e) {
+            throw new Exception("Error parsing ${xeAppsFile.getPath()}. Exception: ${e}")
+        }
+        allAttributes
     }
 
 //    ESResult getById(String id) {
