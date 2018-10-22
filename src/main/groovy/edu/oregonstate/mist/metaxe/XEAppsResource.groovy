@@ -107,7 +107,7 @@ class XEAppsResource extends Resource {
         List<Attributes> paginatedResults
         try {
             paginatedResults = results[startIdx..endIdx]
-        } catch (IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException ignore) {
             // Page out of bounds. Return empty data object with first/last links
             int lastPage = (results.size() + pageSize - 1).intdiv(pageSize).toInteger()
             return new ResultObject(
