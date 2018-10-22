@@ -96,7 +96,25 @@ class XEAppsResource extends Resource {
         instance = sanitize(instance)
         version = sanitize(version)
 
+        def params = [:]
+        if (q) {
+            params.q = q
+        }
+        if (instance) {
+            params.instance = instance
+        }
+        if (version) {
+            params.version = version
+        }
+
         List<Attributes> results = this.dao.search(q, instance, version)
+
+        if (results.isEmpty()) {
+            return new ResultObject(
+                    data: [],
+                    links: getPaginationLinks(params, 0)
+            )
+        }
 
         int pageSize = this.getPageSize()
         int pageNumber = this.getPageNumber()
@@ -119,20 +137,9 @@ class XEAppsResource extends Resource {
             )
         }
 
-        def params = [:]
-        if (q) {
-            params.q = q
-        }
-        if (instance) {
-            params.instance = instance
-        }
-        if (version) {
-            params.version = version
-        }
-
         new ResultObject(
             data: paginatedResults.collect { createResourceObject(it) },
-            links: getPaginationLinks(params, paginatedResults.size())
+            links: getPaginationLinks(params, results.size())
         )
     }
 
@@ -151,7 +158,7 @@ class XEAppsResource extends Resource {
     private Map<String,String> getPaginationLinks(Map<String,String> params, int totalHits) {
         def pageNumber = this.getPageNumber()
         int pageSize = this.getPageSize()
-        int lastPage = (totalHits + pageSize - 1).intdiv(pageSize).toInteger()
+        int lastPage = totalHits != 0 ? (totalHits + pageSize - 1).intdiv(pageSize).toInteger() : 1
 
         [
             self: getPaginationUrl(params, pageNumber, pageSize),
