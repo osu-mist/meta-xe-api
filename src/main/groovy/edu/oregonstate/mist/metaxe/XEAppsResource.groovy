@@ -1,10 +1,11 @@
 package edu.oregonstate.mist.metaxe
 
+import com.codahale.metrics.annotation.Timed
 import edu.oregonstate.mist.api.Resource
 import edu.oregonstate.mist.api.jsonapi.ResourceObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
+import groovy.transform.TypeChecked
 
-import com.codahale.metrics.annotation.Timed
 import javax.annotation.security.PermitAll
 import javax.ws.rs.GET
 import javax.ws.rs.NotFoundException
@@ -19,13 +20,13 @@ import java.util.regex.Pattern
 @Path("xeapps")
 @Produces(MediaType.APPLICATION_JSON)
 @PermitAll
-@groovy.transform.TypeChecked
+@TypeChecked
 class XEAppsResource extends Resource {
     private XEAppDAO dao
     private URI myEndpointUri
 
     private final String JSONAPI_TYPE = "xeapp"
-    private static Pattern sanitizeRegex = ~/[^A-Za-z0-9\.\-]/
+    private static Pattern sanitizeRegex = ~/[^A-Za-z0-9.\-]/
 
     XEAppsResource(XEAppDAO dao, URI endpointUri) {
         this.dao = dao
@@ -51,9 +52,9 @@ class XEAppsResource extends Resource {
 
         new ResultObject(
             data: createResourceObject(attributes),
-//            links: [
-//                self: this.urlFor(es.id)
-//            ]
+            links: [
+                self: this.urlFor(attributes.applicationName)
+            ]
         )
     }
 
@@ -64,10 +65,10 @@ class XEAppsResource extends Resource {
             attributes: new Attributes(
                 applicationName: attributes.applicationName,
                 versions: attributes.versions
-            )
-//            links: [
-//                self: this.urlFor(es.id)
-//            ],
+            ),
+            links: [
+                self: this.urlFor(attributes.applicationName)
+            ]
         )
     }
 
@@ -95,9 +96,28 @@ class XEAppsResource extends Resource {
         instance = sanitize(instance)
         version = sanitize(version)
 
-        List<Attributes> results = this.dao.search(
-                q, instance, version, this.pageNumber, this.pageSize
-        )
+        List<Attributes> results = this.dao.search(q, instance, version)
+
+        int pageSize = this.getPageSize()
+        int pageNumber = this.getPageNumber()
+        int startIdx = (pageNumber - 1) * pageSize
+        int endIdx = (pageNumber * pageSize) - 1
+        endIdx = results.size() - 1 >= endIdx ? endIdx : results.size() - 1
+
+        List<Attributes> paginatedResults
+        try {
+            paginatedResults = results[startIdx..endIdx]
+        } catch (IndexOutOfBoundsException e) {
+            // Page out of bounds. Return empty data object with first/last links
+            int lastPage = (results.size() + pageSize - 1).intdiv(pageSize).toInteger()
+            return new ResultObject(
+                    data: [],
+                    links: [
+                            first: this.getPaginationUrl([:], 1, pageSize),
+                            last: this.getPaginationUrl([:], lastPage, pageSize)
+                    ]
+            )
+        }
 
         def params = [:]
         if (q) {
@@ -111,8 +131,8 @@ class XEAppsResource extends Resource {
         }
 
         new ResultObject(
-            data: results.collect { createResourceObject(it) }
-//            links: getPaginationLinks(params, results.total),
+            data: paginatedResults.collect { createResourceObject(it) },
+            links: getPaginationLinks(params, paginatedResults.size())
         )
     }
 
@@ -123,29 +143,31 @@ class XEAppsResource extends Resource {
     private static String sanitize(String s) {
         if (s != null) {
             sanitizeRegex.matcher(s).replaceAll('')
+        } else {
+            null
         }
     }
 
-//    private Map<String,String> getPaginationLinks(Map<String,String> params, int totalHits) {
-//        def pageNumber = this.getPageNumber()
-//        def pageSize = this.getPageSize()
-//        def lastPage = (totalHits + pageSize - 1).intdiv(pageSize)
-//
-//        [
-//            self: getPaginationUrl(params, pageNumber, pageSize),
-//            first: getPaginationUrl(params, 1, pageSize),
-//            last: getPaginationUrl(params, lastPage, pageSize),
-//            next: pageNumber < lastPage ?
-//                getPaginationUrl(params, pageNumber + 1, pageSize) : null,
-//            prev: pageNumber > 1 ?
-//                getPaginationUrl(params, pageNumber - 1, pageSize) : null,
-//        ]
-//    }
-//
-//    private String getPaginationUrl(Map<String,String> params, int pageNumber, int pageSize) {
-//        params = new LinkedHashMap(params)
-//        params["pageNumber"] = pageNumber.toString()
-//        params["pageSize"] = pageSize.toString()
-//        getPaginationUrl(params, "xeapps")
-//    }
+    private Map<String,String> getPaginationLinks(Map<String,String> params, int totalHits) {
+        def pageNumber = this.getPageNumber()
+        int pageSize = this.getPageSize()
+        int lastPage = (totalHits + pageSize - 1).intdiv(pageSize).toInteger()
+
+        [
+            self: getPaginationUrl(params, pageNumber, pageSize),
+            first: getPaginationUrl(params, 1, pageSize),
+            last: getPaginationUrl(params, lastPage, pageSize),
+            next: pageNumber < lastPage ?
+                getPaginationUrl(params, pageNumber + 1, pageSize) : null,
+            prev: pageNumber > 1 ?
+                getPaginationUrl(params, pageNumber - 1, pageSize) : null,
+        ]
+    }
+
+    private String getPaginationUrl(Map<String,String> params, int pageNumber, int pageSize) {
+        params = new LinkedHashMap(params)
+        params["pageNumber"] = pageNumber.toString()
+        params["pageSize"] = pageSize.toString()
+        getPaginationUrl(params, "xeapps")
+    }
 }
