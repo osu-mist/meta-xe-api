@@ -126,14 +126,11 @@ class XEAppsResource extends Resource {
         try {
             paginatedResults = results[startIdx..endIdx]
         } catch (IndexOutOfBoundsException ignore) {
-            // Page out of bounds. Return empty data object with first/last links
-            int lastPage = (results.size() + pageSize - 1).intdiv(pageSize).toInteger()
+            // Page out of bounds. Return empty data object with first/last links and null values
+            // for self, next, and prev links
             return new ResultObject(
                     data: [],
-                    links: [
-                            first: this.getPaginationUrl([:], 1, pageSize),
-                            last: this.getPaginationUrl([:], lastPage, pageSize)
-                    ]
+                    links: getPaginationLinks(params, results.size(), false)
             )
         }
 
@@ -155,18 +152,19 @@ class XEAppsResource extends Resource {
         }
     }
 
-    private Map<String,String> getPaginationLinks(Map<String,String> params, int totalHits) {
+    private Map<String,String> getPaginationLinks(Map<String,String> params, int totalHits,
+                                                  boolean inBounds = true) {
         def pageNumber = this.getPageNumber()
         int pageSize = this.getPageSize()
         int lastPage = totalHits != 0 ? (totalHits + pageSize - 1).intdiv(pageSize).toInteger() : 1
 
         [
-            self: getPaginationUrl(params, pageNumber, pageSize),
+            self: inBounds ? getPaginationUrl(params, pageNumber, pageSize) : null,
             first: getPaginationUrl(params, 1, pageSize),
             last: getPaginationUrl(params, lastPage, pageSize),
-            next: pageNumber < lastPage ?
+            next: inBounds && pageNumber < lastPage ?
                 getPaginationUrl(params, pageNumber + 1, pageSize) : null,
-            prev: pageNumber > 1 ?
+            prev: inBounds && pageNumber > 1 ?
                 getPaginationUrl(params, pageNumber - 1, pageSize) : null,
         ]
     }
