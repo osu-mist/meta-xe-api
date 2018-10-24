@@ -45,3 +45,5 @@ authentication:
 
 api:
   endpointUri: https://api.oregonstate.edu/v1/
+
+xeAppsFilePath: scripts/get_xe_apps/xe_apps.json
