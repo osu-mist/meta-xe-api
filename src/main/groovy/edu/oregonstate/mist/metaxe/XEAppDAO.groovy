@@ -21,9 +21,9 @@ class XEAppDAO {
     List<Attributes> search(String q, String instance, String version) {
         Map<String, Attributes> allAttributes = getAllAttributes()
         Map<String, Attributes> filteredAttributes = allAttributes.findAll { key, value ->
-            (q == null || key.contains(q)) &&
-                    (instance == null || value.versions.containsKey(instance)) &&
-                    (version == null || value.versions.containsValue(version))
+            (!q || key.contains(q)) &&
+                    (!instance || value.versions.containsKey(instance)) &&
+                    (!version || value.versions.containsValue(version))
         }
         filteredAttributes.values().asList()
     }
