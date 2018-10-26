@@ -7,6 +7,7 @@ import io.dropwizard.setup.Environment
  * Main application class.
  */
 class MetaXEApplication extends Application<MetaXEConfiguration> {
+
     /**
      * Parses command-line arguments and runs the application.
      *
@@ -17,7 +18,7 @@ class MetaXEApplication extends Application<MetaXEConfiguration> {
     public void run(MetaXEConfiguration configuration, Environment environment) {
         this.setup(configuration, environment)
 
-        XEAppDAO xeAppDAO = new XEAppDAO(configuration.elasticsearchUrl)
+        XEAppDAO xeAppDAO = new XEAppDAO(configuration.xeAppsFilePath)
         environment.jersey().register(new XEAppsResource(xeAppDAO, configuration.api.endpointUri))
     }
 
