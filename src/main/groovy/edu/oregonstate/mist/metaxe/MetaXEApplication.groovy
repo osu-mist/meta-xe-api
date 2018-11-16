@@ -1,6 +1,7 @@
 package edu.oregonstate.mist.metaxe
 
 import edu.oregonstate.mist.api.Application
+import edu.oregonstate.mist.metaxe.health.MetaXEHealthCheck
 import io.dropwizard.setup.Environment
 
 /**
@@ -20,6 +21,9 @@ class MetaXEApplication extends Application<MetaXEConfiguration> {
 
         XEAppDAO xeAppDAO = new XEAppDAO(configuration.xeAppsFilePath)
         environment.jersey().register(new XEAppsResource(xeAppDAO, configuration.api.endpointUri))
+
+        MetaXEHealthCheck check = new MetaXEHealthCheck(configuration.xeAppsFilePath)
+        environment.healthChecks().register("MetaXEHealthCheck", check)
     }
 
     /**
