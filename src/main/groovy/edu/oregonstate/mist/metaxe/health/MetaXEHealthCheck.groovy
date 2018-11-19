@@ -26,15 +26,13 @@ class MetaXEHealthCheck extends HealthCheck {
             Map<String, Attributes> allAttributes
             try {
                 allAttributes = XEAppDAO.getAllAttributes(xeAppsFile)
+                if (allAttributes.isEmpty()) {
+                    throw new Exception("No data found in xeAppsFile")
+                }
             } catch (Exception e) {
                 return Result.unhealthy(e)
             }
-
-            if (allAttributes.isEmpty()) {
-                Result.unhealthy("No data found in xeAppsFile")
-            } else {
-                Result.healthy()
-            }
+            Result.healthy()
         } else {
             Result.unhealthy("xeAppsFilePath: ${xeAppsFilePath} does not exist")
         }
