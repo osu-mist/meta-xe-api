@@ -7,19 +7,18 @@ import groovy.transform.TypeChecked
 @TypeChecked
 class XEAppDAO {
     private File xeAppsFile
-    private ObjectMapper mapper = new ObjectMapper()
 
     XEAppDAO(String xeAppsFileName) {
         xeAppsFile = new File(xeAppsFileName)
     }
 
     Attributes getById(String id) {
-        Map<String, Attributes> allAttributes = getAllAttributes()
+        Map<String, Attributes> allAttributes = getAllAttributes(xeAppsFile)
         allAttributes?.get(id)
     }
 
     List<Attributes> search(String q, String instance, String version) {
-        Map<String, Attributes> allAttributes = getAllAttributes()
+        Map<String, Attributes> allAttributes = getAllAttributes(xeAppsFile)
         Map<String, Attributes> filteredAttributes = allAttributes.findAll { key, value ->
             (!q || key.contains(q)) &&
                     (!instance || value.versions.containsKey(instance)) &&
@@ -28,8 +27,9 @@ class XEAppDAO {
         filteredAttributes.values().asList()
     }
 
-    private Map<String, Attributes> getAllAttributes() {
+    static Map<String, Attributes> getAllAttributes(File xeAppsFile) throws Exception {
         Map<String, Attributes> allAttributes
+        ObjectMapper mapper = new ObjectMapper()
         try {
             allAttributes = mapper.readValue(
                     xeAppsFile, new TypeReference<Map<String, Attributes>>() {}

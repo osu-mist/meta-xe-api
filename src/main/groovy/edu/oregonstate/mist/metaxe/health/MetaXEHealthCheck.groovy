@@ -2,6 +2,8 @@ package edu.oregonstate.mist.metaxe.health
 
 import com.codahale.metrics.health.HealthCheck
 import com.codahale.metrics.health.HealthCheck.Result
+import edu.oregonstate.mist.metaxe.Attributes
+import edu.oregonstate.mist.metaxe.XEAppDAO
 
 class MetaXEHealthCheck extends HealthCheck {
     String xeAppsFilePath
@@ -21,7 +23,18 @@ class MetaXEHealthCheck extends HealthCheck {
             return Result.unhealthy("xeAppsFilePath is null")
         }
         if (xeAppsFile.exists()) {
-            Result.healthy()
+            Map<String, Attributes> allAttributes
+            try {
+                allAttributes = XEAppDAO.getAllAttributes(xeAppsFile)
+            } catch (Exception e) {
+                return Result.unhealthy(e)
+            }
+
+            if (allAttributes.isEmpty()) {
+                Result.unhealthy("No data found in xeAppsFile")
+            } else {
+                Result.healthy()
+            }
         } else {
             Result.unhealthy("xeAppsFilePath: ${xeAppsFilePath} does not exist")
         }
