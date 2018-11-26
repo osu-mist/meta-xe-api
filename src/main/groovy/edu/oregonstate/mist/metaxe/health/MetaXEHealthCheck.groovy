@@ -14,27 +14,21 @@ class MetaXEHealthCheck extends HealthCheck {
 
     @Override
     protected Result check() throws Exception {
-        File xeAppsFile
         try {
-            xeAppsFile = new File(xeAppsFilePath)
+            File xeAppsFile = new File(xeAppsFilePath)
+            if (!xeAppsFile.exists()) {
+                return Result.unhealthy("xeAppsFilePath: ${xeAppsFilePath} does not exist")
+            }
+            Map<String, Attributes> allAttributes = XEAppDAO.getAllAttributes(xeAppsFile)
+            if (allAttributes.isEmpty()) {
+                return Result.unhealthy("No data found in xeAppsFile")
+            }
         } catch (NullPointerException ignore) {
             // This shouldn't happen since a null xeAppsFilePath property in the configuration
             // file should prevent the run task from succeeding
             return Result.unhealthy("xeAppsFilePath is null")
-        }
-        if (xeAppsFile.exists()) {
-            Map<String, Attributes> allAttributes
-            try {
-                allAttributes = XEAppDAO.getAllAttributes(xeAppsFile)
-                if (allAttributes.isEmpty()) {
-                    throw new Exception("No data found in xeAppsFile")
-                }
-            } catch (Exception e) {
-                return Result.unhealthy(e)
-            }
-            Result.healthy()
-        } else {
-            Result.unhealthy("xeAppsFilePath: ${xeAppsFilePath} does not exist")
+        } catch (Exception e) {
+            return Result.unhealthy(e)
         }
     }
 }
