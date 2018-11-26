@@ -2,6 +2,7 @@ package edu.oregonstate.mist.metaxe
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import groovy.transform.InheritConstructors
 import groovy.transform.TypeChecked
 
 @TypeChecked
@@ -27,16 +28,19 @@ class XEAppDAO {
         filteredAttributes.values().asList()
     }
 
-    static Map<String, Attributes> getAllAttributes(File xeAppsFile) throws Exception {
+    static Map<String, Attributes> getAllAttributes(File xeAppsFile) throws XeParsingException {
         Map<String, Attributes> allAttributes
         ObjectMapper mapper = new ObjectMapper()
         try {
             allAttributes = mapper.readValue(
                     xeAppsFile, new TypeReference<Map<String, Attributes>>() {}
             ) as Map<String, Attributes>
-        } catch (Exception e) {
-            throw new Exception("Error parsing ${xeAppsFile.getPath()}. Exception: ${e}")
+        } catch (IOException e) {
+            throw new XeParsingException("Error parsing ${xeAppsFile.getPath()}. Exception: ${e}")
         }
         allAttributes
     }
 }
+
+@InheritConstructors
+class XeParsingException extends Exception {}
