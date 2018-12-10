@@ -4,6 +4,7 @@ import com.codahale.metrics.health.HealthCheck
 import com.codahale.metrics.health.HealthCheck.Result
 import edu.oregonstate.mist.metaxe.Attributes
 import edu.oregonstate.mist.metaxe.XEAppDAO
+import edu.oregonstate.mist.metaxe.XeParsingException
 
 class MetaXEHealthCheck extends HealthCheck {
     String xeAppsFilePath
@@ -27,8 +28,11 @@ class MetaXEHealthCheck extends HealthCheck {
             // This shouldn't happen since a null xeAppsFilePath property in the configuration
             // file should prevent the run task from succeeding
             return Result.unhealthy("xeAppsFilePath is null")
+        } catch (XeParsingException e) {
+            return Result.unhealthy(e)
         } catch (Exception e) {
             return Result.unhealthy(e)
         }
+        Result.healthy()
     }
 }
